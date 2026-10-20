@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react"
+import { askTwinSightAI } from "./services/aiAnalyzerService"
 import {
   Activity, AlertTriangle, AlertOctagon, BarChart3, Bell, Binary, Brain,
   Calendar, CheckCircle, Download, FileText, Fingerprint, Home, Layers,
@@ -619,6 +620,63 @@ const DashboardPage = ({ m }) => {
           </div>
         </GCard>
       </div>
+
+      {/* API Key Modal */}
+      {showKeyModal && (
+        <div style={{
+          position:'fixed', inset:0, background:'rgba(2,10,26,.85)', backdropFilter:'blur(8px)',
+          display:'flex', alignItems:'center', justifyContent:'center', zIndex:999, padding:20
+        }}>
+          <div style={{
+            background:'#04122A', border:`1px solid ${C.accentBorder}`, borderRadius:14,
+            padding:24, width:'100%', maxWidth:440, boxShadow:'0 0 30px rgba(0,0,0,.8)'
+          }}>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16 }}>
+              <div style={{ color:C.tp, fontSize:15, fontWeight:700 }}>AI Provider Configuration</div>
+              <button onClick={() => setShowKeyModal(false)} style={{ background:'none', border:'none', color:C.tm, fontSize:16, cursor:'pointer' }}>✕</button>
+            </div>
+            <p style={{ color:C.ts, fontSize:11.5, marginBottom:16, lineHeight:1.5 }}>
+              By default, TwinSight uses an <strong>Autonomous 3GPP/ETSI NOC Engine</strong> without requiring any external API keys. You can optionally connect a live Google Gemini or Anthropic Claude API key below:
+            </p>
+            <div style={{ marginBottom:14 }}>
+              <label style={{ display:'block', color:C.tp, fontSize:11, fontWeight:600, marginBottom:5 }}>Google Gemini API Key (Gemini 2.5 Flash)</label>
+              <input
+                type="password"
+                placeholder="AIzaSy..."
+                value={gemKeyInput}
+                onChange={e => setGemKeyInput(e.target.value)}
+                style={{
+                  width:'100%', padding:'8px 12px', borderRadius:7, background:'rgba(30,144,255,.06)',
+                  border:`1px solid ${C.accentBorder}`, color:C.tp, fontSize:12, outline:'none'
+                }}
+              />
+            </div>
+            <div style={{ marginBottom:20 }}>
+              <label style={{ display:'block', color:C.tp, fontSize:11, fontWeight:600, marginBottom:5 }}>Anthropic Claude API Key (Claude Sonnet)</label>
+              <input
+                type="password"
+                placeholder="sk-ant-api03-..."
+                value={antKeyInput}
+                onChange={e => setAntKeyInput(e.target.value)}
+                style={{
+                  width:'100%', padding:'8px 12px', borderRadius:7, background:'rgba(30,144,255,.06)',
+                  border:`1px solid ${C.accentBorder}`, color:C.tp, fontSize:12, outline:'none'
+                }}
+              />
+            </div>
+            <div style={{ display:'flex', justifyContent:'flex-end', gap:10 }}>
+              <button
+                onClick={() => { setGemKeyInput(''); setAntKeyInput(''); }}
+                style={{ padding:'7px 14px', borderRadius:7, background:'transparent', border:'1px solid rgba(255,56,96,.3)', color:C.danger, fontSize:11, cursor:'pointer' }}
+              >Clear All</button>
+              <button
+                onClick={handleSaveKeys}
+                style={{ padding:'7px 18px', borderRadius:7, background:C.accent, border:'none', color:'white', fontSize:11, fontWeight:600, cursor:'pointer' }}
+              >Save & Apply</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -1481,35 +1539,14 @@ const AIAnalyzerPage = ({ m }) => {
   }])
   const [input, setInput]   = useState('')
   const [loading, setLoading] = useState(false)
+  const [showKeyModal, setShowKeyModal] = useState(false)
+  const [gemKeyInput, setGemKeyInput] = useState(localStorage.getItem('twinsight_gemini_key') || '')
+  const [antKeyInput, setAntKeyInput] = useState(localStorage.getItem('twinsight_anthropic_key') || '')
+  const [providerName, setProviderName] = useState(
+    localStorage.getItem('twinsight_gemini_key') ? 'Gemini 2.5 Flash' :
+    localStorage.getItem('twinsight_anthropic_key') ? 'Claude Sonnet' : 'Autonomous NOC Engine'
+  )
   const chatRef = useRef(null)
-
-  const SYSTEM = `You are TwinSight AI, an expert NOC (Network Operations Center) analyst for L&T Techgium's 5G SA Core network platform, located in Mumbai, India.
-
-LIVE NETWORK STATE:
-- Network Health Score: ${m.health}/100
-- Active Network Slices: 6 (2 eMBB, 1 URLLC, 1 mMTC-IoT, 1 V2X, 1 NTN)
-- Average End-to-End Latency: ${m.latency}ms
-- Call Success Rate (VoNR): ${m.callS}%
-- Authentication Success Rate (5G-AKA): ${m.authS}%
-- AI Prediction Confidence: ${m.aiS}%
-- Connected Devices: 168,400 (UE + IoT + V2X)
-
-ACTIVE INCIDENTS:
-- INC-4421 [CRITICAL]: Volumetric DDoS attack on Core Network. Peak traffic 2.4 Tbps. BGP route hijack detected.
-- INC-4418 [HIGH]: mMTC-IoT Slice at 88% occupancy — SLA breach imminent.
-
-THREAT INTELLIGENCE:
-- DDoS Attack Probability: 68% (above 60% threshold)
-- Active Brute Force: Risk 76% on IMS Cluster (Region MUM-03)
-- Port Scan Detected: Risk 81% from EDGE-02
-- Auth Failure Spike: 3.2× normal rate in MUM-03
-
-PREDICTIVE ALERTS:
-- gNB-003 hardware degradation detected — maintenance within 48h
-- Edge Node 02 congestion predicted in 14 minutes
-- mMTC-IoT slice SLA breach risk in 8 minutes without scaling
-
-Respond as a highly technical 5G telecom NOC expert. Use precise 3GPP/ETSI/ITU terminology. Provide specific, actionable recommendations with quantified impact where possible. Use markdown-style formatting with clear sections. Keep responses focused (200-350 words).`
 
   const QUICK_ACTIONS = [
     { emoji:'📊', label:'Full Network Analysis',     q:'Provide a comprehensive analysis of the current network health. Highlight the top 3 risks, their potential impact, and recommended immediate actions.' },
@@ -1528,22 +1565,31 @@ Respond as a highly technical 5G telecom NOC expert. Use precise 3GPP/ETSI/ITU t
     setInput('')
     setLoading(true)
     try {
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
-        method:'POST',
-        headers:{ 'Content-Type':'application/json' },
-        body: JSON.stringify({
-          model:'claude-sonnet-4-20250514',
-          max_tokens:1000,
-          system: SYSTEM,
-          messages: newMsgs
-        })
-      })
-      const data = await res.json()
-      const reply = data?.content?.[0]?.text || 'Analysis unavailable — API connection issue.'
+      const { text: reply, provider } = await askTwinSightAI(trimmed, m, msgs)
+      if (provider) setProviderName(provider)
       setMsgs(prev => [...prev, { role:'assistant', content:reply }])
     } catch(e) {
-      setMsgs(prev => [...prev, { role:'assistant', content:'⚠ Connection error. Check API configuration and retry.' }])
+      setMsgs(prev => [...prev, { role:'assistant', content:'⚠ Error processing request. Autonomous engine fallback engaged.' }])
     } finally { setLoading(false) }
+  }
+
+  const handleSaveKeys = () => {
+    if (gemKeyInput.trim()) {
+      localStorage.setItem('twinsight_gemini_key', gemKeyInput.trim())
+      setProviderName('Gemini 2.5 Flash')
+    } else {
+      localStorage.removeItem('twinsight_gemini_key')
+    }
+    if (antKeyInput.trim()) {
+      localStorage.setItem('twinsight_anthropic_key', antKeyInput.trim())
+      if (!gemKeyInput.trim()) setProviderName('Claude Sonnet')
+    } else {
+      localStorage.removeItem('twinsight_anthropic_key')
+    }
+    if (!gemKeyInput.trim() && !antKeyInput.trim()) {
+      setProviderName('Autonomous NOC Engine')
+    }
+    setShowKeyModal(false)
   }
 
   useEffect(() => {
@@ -1625,9 +1671,24 @@ Respond as a highly technical 5G telecom NOC expert. Use precise 3GPP/ETSI/ITU t
               <div style={{ color:C.tp, fontSize:13, fontWeight:700, fontFamily:'"Rajdhani",sans-serif', letterSpacing:.5 }}>TwinSight AI</div>
               <div style={{ color:C.success, fontSize:9.5 }}>● Online · 5G NOC Intelligence · Mumbai Region</div>
             </div>
-            <div style={{ marginLeft:'auto', color:C.tm, fontSize:10 }}>
-              <span style={{ background:'rgba(0,229,255,.1)', color:C.cyan, padding:'2px 8px',
-                borderRadius:4, fontSize:9, fontWeight:600 }}>Claude Sonnet</span>
+            <div style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:8 }}>
+              <span style={{ background:'rgba(0,229,255,.1)', color:C.cyan, padding:'3px 9px',
+                borderRadius:4, fontSize:9.5, fontWeight:600 }}>{providerName}</span>
+              <button
+                onClick={() => setShowKeyModal(true)}
+                style={{
+                  background: 'rgba(30,144,255,0.14)',
+                  border: `1px solid ${C.accentBorder}`,
+                  color: C.accent,
+                  borderRadius: 6,
+                  padding: '3px 8px',
+                  fontSize: 10,
+                  cursor: 'pointer',
+                  fontWeight: 600
+                }}
+              >
+                ⚙ API Config
+              </button>
             </div>
           </div>
 
@@ -1657,17 +1718,29 @@ Respond as a highly technical 5G telecom NOC expert. Use precise 3GPP/ETSI/ITU t
                   color:C.tp, fontSize:12.5, lineHeight:1.65,
                   borderTopRightRadius:msg.role==='user'?3:12,
                   borderTopLeftRadius:msg.role==='assistant'?3:12 }}>
-                  {msg.content.split('\n').map((line,j) => (
-                    <span key={j}>
-                      {j > 0 && <br/>}
-                      {line.startsWith('**') && line.endsWith('**')
-                        ? <strong style={{ color:C.accent }}>{line.slice(2,-2)}</strong>
-                        : line.startsWith('- ') || line.startsWith('• ')
-                          ? <span style={{ color:C.ts }}>{'  '}{line}</span>
-                          : line
-                      }
-                    </span>
-                  ))}
+                  {msg.content.split('\n').map((line,j) => {
+                    if (line.startsWith('### ')) {
+                      return <div key={j} style={{ color:C.cyan, fontSize:13.5, fontWeight:700, margin:'8px 0 4px', letterSpacing:.3 }}>{line.replace('### ', '')}</div>
+                    }
+                    if (line.startsWith('#### ')) {
+                      return <div key={j} style={{ color:C.accent, fontSize:12.5, fontWeight:600, margin:'6px 0 2px' }}>{line.replace('#### ', '')}</div>
+                    }
+                    if (line.startsWith('* ') || line.startsWith('- ')) {
+                      return <div key={j} style={{ color:C.tp, marginLeft:8, display:'flex', gap:6 }}>
+                        <span style={{ color:C.accent }}>•</span>
+                        <span>{line.replace(/^(\* |- )/, '')}</span>
+                      </div>
+                    }
+                    if (line.startsWith('|') && line.endsWith('|')) {
+                      return <div key={j} style={{ fontFamily:'"JetBrains Mono",monospace', fontSize:11, color:C.ts, overflowX:'auto' }}>{line}</div>
+                    }
+                    return (
+                      <span key={j}>
+                        {j > 0 && <br/>}
+                        {line}
+                      </span>
+                    )
+                  })}
                 </div>
               </div>
             ))}
@@ -1720,6 +1793,63 @@ Respond as a highly technical 5G telecom NOC expert. Use precise 3GPP/ETSI/ITU t
           </div>
         </GCard>
       </div>
+
+      {/* API Key Modal */}
+      {showKeyModal && (
+        <div style={{
+          position:'fixed', inset:0, background:'rgba(2,10,26,.85)', backdropFilter:'blur(8px)',
+          display:'flex', alignItems:'center', justifyContent:'center', zIndex:999, padding:20
+        }}>
+          <div style={{
+            background:'#04122A', border:`1px solid ${C.accentBorder}`, borderRadius:14,
+            padding:24, width:'100%', maxWidth:440, boxShadow:'0 0 30px rgba(0,0,0,.8)'
+          }}>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16 }}>
+              <div style={{ color:C.tp, fontSize:15, fontWeight:700 }}>AI Provider Configuration</div>
+              <button onClick={() => setShowKeyModal(false)} style={{ background:'none', border:'none', color:C.tm, fontSize:16, cursor:'pointer' }}>✕</button>
+            </div>
+            <p style={{ color:C.ts, fontSize:11.5, marginBottom:16, lineHeight:1.5 }}>
+              By default, TwinSight uses an <strong>Autonomous 3GPP/ETSI NOC Engine</strong> without requiring any external API keys. You can optionally connect a live Google Gemini or Anthropic Claude API key below:
+            </p>
+            <div style={{ marginBottom:14 }}>
+              <label style={{ display:'block', color:C.tp, fontSize:11, fontWeight:600, marginBottom:5 }}>Google Gemini API Key (Gemini 2.5 Flash)</label>
+              <input
+                type="password"
+                placeholder="AIzaSy..."
+                value={gemKeyInput}
+                onChange={e => setGemKeyInput(e.target.value)}
+                style={{
+                  width:'100%', padding:'8px 12px', borderRadius:7, background:'rgba(30,144,255,.06)',
+                  border:`1px solid ${C.accentBorder}`, color:C.tp, fontSize:12, outline:'none'
+                }}
+              />
+            </div>
+            <div style={{ marginBottom:20 }}>
+              <label style={{ display:'block', color:C.tp, fontSize:11, fontWeight:600, marginBottom:5 }}>Anthropic Claude API Key (Claude Sonnet)</label>
+              <input
+                type="password"
+                placeholder="sk-ant-api03-..."
+                value={antKeyInput}
+                onChange={e => setAntKeyInput(e.target.value)}
+                style={{
+                  width:'100%', padding:'8px 12px', borderRadius:7, background:'rgba(30,144,255,.06)',
+                  border:`1px solid ${C.accentBorder}`, color:C.tp, fontSize:12, outline:'none'
+                }}
+              />
+            </div>
+            <div style={{ display:'flex', justifyContent:'flex-end', gap:10 }}>
+              <button
+                onClick={() => { setGemKeyInput(''); setAntKeyInput(''); }}
+                style={{ padding:'7px 14px', borderRadius:7, background:'transparent', border:'1px solid rgba(255,56,96,.3)', color:C.danger, fontSize:11, cursor:'pointer' }}
+              >Clear All</button>
+              <button
+                onClick={handleSaveKeys}
+                style={{ padding:'7px 18px', borderRadius:7, background:C.accent, border:'none', color:'white', fontSize:11, fontWeight:600, cursor:'pointer' }}
+              >Save & Apply</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

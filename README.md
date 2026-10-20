@@ -1,14 +1,21 @@
-# TwinSight 
+# TwinSight ⚡
 
 ### AI-Powered Digital Twin for Autonomous 5G Network Management
 
 > Enterprise-grade NOC Intelligence Platform for L&T Techgium | 5G/6G Ready
 
+[![Vite](https://img.shields.io/badge/Vite-5.4-646CFF?logo=vite&logoColor=white)](https://vitejs.dev/)
+[![React](https://img.shields.io/badge/React-18.2-61DAFB?logo=react&logoColor=black)](https://react.dev/)
+[![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.4-38B2AC?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.111-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![3GPP](https://img.shields.io/badge/3GPP-Release_17_SA-blue)](https://www.3gpp.org/)
+[![License](https://img.shields.io/badge/License-Proprietary-emerald)](LICENSE)
+
 ---
 
 ## Overview
 
-TwinSight is a full-stack AI-powered Digital Twin platform that provides real-time autonomous management of 5G network infrastructure. It combines Digital Twins, Predictive Analytics, AI-driven anomaly detection, and autonomous orchestration into a self-healing network management ecosystem.
+TwinSight is a full-stack AI-powered Digital Twin platform providing real-time autonomous management of 5G network infrastructure. It combines Digital Twins, Predictive Analytics, AI-driven anomaly detection, and autonomous orchestration into a self-healing network management ecosystem.
 
 ---
 
@@ -23,21 +30,21 @@ TwinSight is a full-stack AI-powered Digital Twin platform that provides real-ti
 | **Security SOC** | DDoS detection, threat intelligence, global attack map |
 | **Digital Twin** ⭐ | Live SVG network topology with animated simulation modes |
 | **AI Control** | Autonomous/manual mode, prediction arcs, action queue |
-| **AI Analyzer** 🤖 | Claude Sonnet-powered NOC intelligence chat interface |
+| **AI Analyzer** 🤖 | Multi-engine NOC intelligence (Autonomous 3GPP Engine, Gemini 2.5 Flash, Claude) |
 | **Incidents** | ITIL-aligned lifecycle, RCA, autonomous recovery queue |
 | **Reports** | Daily/Weekly/Monthly with PDF/CSV/Excel export |
-| **Settings** | User management, API keys, integrations |
+| **Settings** | User management, API keys, AI provider configuration |
 
 ---
 
 ## Tech Stack
 
 ### Frontend
-- **React 18** + **Vite** — fast development & build
-- **Recharts** — all data visualizations
-- **Lucide React** — icons
-- **TailwindCSS** — utility-first styling
-- **Space Grotesk** + **Rajdhani** + **JetBrains Mono** — typography
+- **React 18** + **Vite** — ultra-fast development & production bundling
+- **Recharts** — real-time responsive data visualizations
+- **Lucide React** — NOC icons
+- **TailwindCSS** — utility-first dark cyberpunk styling
+- **Space Grotesk** + **Rajdhani** + **JetBrains Mono** — telemetry typography
 
 ### Backend
 - **FastAPI** — async Python API with WebSocket support
@@ -46,12 +53,14 @@ TwinSight is a full-stack AI-powered Digital Twin platform that provides real-ti
 - **SQLAlchemy** + **Alembic** — ORM & migrations
 
 ### AI Layer
-- **Anthropic Claude Sonnet** — AI Analyzer (NOC intelligence chat)
-- **Scikit-learn** — anomaly detection & prediction models
+- **Autonomous 3GPP/ETSI NOC Engine** — built-in offline intelligence engine with zero setup
+- **Google Gemini 2.5 Flash & Anthropic Claude** — multi-provider LLM support with live API keys
+- **Scikit-learn** — anomaly detection & degradation forecasting
 - **PyTorch** — deep learning ready architecture
 
 ### DevOps
 - **Docker** + **Docker Compose** — containerized deployment
+- **Vercel** — instant frontend deployment support
 - **Nginx** — reverse proxy & static file serving
 
 ---
@@ -60,11 +69,12 @@ TwinSight is a full-stack AI-powered Digital Twin platform that provides real-ti
 
 ### Option A — Standalone Frontend (Recommended for Demo)
 
-The simplest way to run TwinSight — no backend required.
+Run TwinSight directly in your browser — zero backend required.
 
 ```bash
-# 1. Clone / unzip the project
-cd twinsight/frontend
+# 1. Clone repository
+git clone https://github.com/Roxen-AS/TwinSight.git
+cd TwinSight/frontend
 
 # 2. Install dependencies
 npm install
@@ -76,7 +86,7 @@ npm run dev
 # Login with any credentials
 ```
 
-The frontend includes all mock data and simulated real-time updates. The AI Analyzer page connects to the Anthropic API directly from the browser.
+The frontend includes full mock data, simulated real-time updates, and an autonomous AI NOC analyzer with optional Gemini/Claude API key integration.
 
 ### Option B — Full Stack with Docker
 
@@ -84,10 +94,7 @@ The frontend includes all mock data and simulated real-time updates. The AI Anal
 # 1. Copy environment file
 cp .env.example .env
 
-# 2. Fill in your values (minimum: ANTHROPIC_API_KEY)
-nano .env
-
-# 3. Start all services
+# 2. Start all services
 docker-compose up -d
 
 # Services:
@@ -100,7 +107,7 @@ docker-compose up -d
 ### Option C — Backend Only
 
 ```bash
-cd twinsight/backend
+cd backend
 
 # Create virtual environment
 python -m venv venv
@@ -108,9 +115,6 @@ source venv/bin/activate  # Windows: venv\Scripts\activate
 
 # Install dependencies
 pip install -r requirements.txt
-
-# Set environment variables
-cp ../.env.example .env
 
 # Run server
 uvicorn main:app --reload --port 8000
@@ -123,60 +127,46 @@ uvicorn main:app --reload --port 8000
 ## Project Structure
 
 ```
-twinsight/
+TwinSight/
 ├── frontend/
 │   ├── src/
-│   │   ├── TwinSight.jsx       ← Main application (all 11 pages)
-│   │   ├── main.jsx            ← React entry point
-│   │   └── index.css           ← Global styles + animations
+│   │   ├── services/
+│   │   │   └── aiAnalyzerService.js   ← Multi-provider AI NOC engine
+│   │   ├── TwinSight.jsx             ← Main application (all 11 pages)
+│   │   ├── main.jsx                  ← React entry point
+│   │   └── index.css                 ← Global styles + animations
 │   ├── public/
 │   │   └── favicon.svg
 │   ├── index.html
 │   ├── package.json
 │   ├── vite.config.js
 │   ├── tailwind.config.js
+│   ├── vercel.json
 │   └── Dockerfile
 │
 ├── backend/
-│   ├── main.py                 ← FastAPI app + WebSocket broadcaster
+│   ├── main.py                       ← FastAPI app + WebSocket broadcaster
 │   ├── routers/
-│   │   ├── dashboard.py        ← KPIs, traffic, radar
-│   │   ├── slices.py           ← NSI/NSSI CRUD + actions
-│   │   ├── callflow.py         ← VoNR analytics
-│   │   ├── auth.py             ← Auth risk analytics
-│   │   ├── security.py         ← SOC, threats, DDoS
-│   │   ├── twin.py             ← Digital twin state + simulation
-│   │   ├── ai_control.py       ← AI predictions + mode control
-│   │   ├── incidents.py        ← Incident lifecycle
-│   │   └── reports.py          ← Report generation
+│   │   ├── dashboard.py              ← KPIs, traffic, radar
+│   │   ├── slices.py                 ← NSI/NSSI CRUD + actions
+│   │   ├── callflow.py               ← VoNR analytics
+│   │   ├── auth.py                   ← Auth risk analytics
+│   │   ├── security.py               ← SOC, threats, DDoS
+│   │   ├── twin.py                   ← Digital twin state + simulation
+│   │   ├── ai_control.py             ← AI predictions + mode control
+│   │   ├── incidents.py              ← Incident lifecycle
+│   │   └── reports.py                ← Report generation
 │   ├── requirements.txt
 │   └── Dockerfile
 │
 ├── docs/
-│   └── schema.sql              ← Complete PostgreSQL schema
+│   └── schema.sql                    ← Complete PostgreSQL schema
 │
 ├── docker-compose.yml
 ├── .env.example
+├── vercel.json
 └── README.md
 ```
-
----
-
-## API Reference
-
-Full interactive docs: **http://localhost:8000/api/docs**
-
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/api/health` | System health check |
-| GET | `/api/dashboard/metrics` | Live network KPIs |
-| GET | `/api/dashboard/traffic` | 24h traffic timeseries |
-| GET | `/api/slices/` | List all network slices |
-| POST | `/api/slices/{id}/action` | Scale/pause/fail/heal slice |
-| GET | `/api/security/threats` | Active threat intelligence |
-| GET | `/api/ai/predictions` | AI probability predictions |
-| POST | `/api/twin/simulate` | Trigger simulation mode |
-| WS | `/ws/telemetry` | Live telemetry stream |
 
 ---
 
@@ -194,59 +184,6 @@ Activate **AI Recovery** to watch autonomous healing animate across all affected
 
 ---
 
-## AI Analyzer
+## 👤 Author
 
-The AI Analyzer uses **Claude Sonnet** to provide real-time NOC intelligence. It has full context of the current network state (metrics, incidents, threats, slice status) and can:
-
-- Perform comprehensive network health analysis
-- Assess DDoS threats with 3GPP-aligned mitigation strategies
-- Recommend slice scaling with capacity calculations
-- Review SLA compliance and breach risks
-- Predict 24h outage probabilities
-- Analyze authentication attack patterns
-
-The Anthropic API is called directly from the browser — ensure `ANTHROPIC_API_KEY` is configured.
-
----
-
-## Environment Variables
-
-| Variable | Required | Description |
-|---|---|---|
-| `ANTHROPIC_API_KEY` | ✓ | For AI Analyzer feature |
-| `DATABASE_URL` | Backend only | PostgreSQL connection string |
-| `REDIS_URL` | Backend only | Redis connection string |
-| `JWT_SECRET` | Backend only | JWT signing secret |
-
----
-
-## Deployment
-
-### Production Build
-
-```bash
-# Frontend
-cd frontend
-npm run build
-# Output: frontend/dist/
-
-# Backend
-cd backend
-uvicorn main:app --host 0.0.0.0 --port 8000 --workers 4
-```
-
-### Docker Production
-
-```bash
-ENVIRONMENT=production docker-compose up -d --build
-```
-
----
-
-## License
-
-Built for **L&T Techgium** — Enterprise 5G Network Intelligence Platform.
-
----
-
-*TwinSight v1.0.0 — Designed with ♦ for the future of autonomous 5G networks*
+Developed for **L&T Techgium** by [**Roxen-AS**](https://github.com/Roxen-AS).

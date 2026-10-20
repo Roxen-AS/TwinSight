@@ -27,11 +27,12 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: true,
+    chunkSizeWarningLimit: 1200,
     rollupOptions: {
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom'],
-          charts: ['recharts', 'd3'],
+          recharts: ['recharts'],
           icons: ['lucide-react'],
         },
       },
