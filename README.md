@@ -197,4 +197,4 @@ Live on Vercel: [**https://frontend-three-coral-99.vercel.app**](https://fronten
 
 ## 👤 Author
 
-Developed for **L&T Techgium** by [**Roxen-AS**](https://github.com/Roxen-AS).
+Developed for by [**Roxen-AS**](https://github.com/Roxen-AS).
