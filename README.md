@@ -4,12 +4,17 @@
 
 > Enterprise-grade NOC Intelligence Platform for L&T Techgium | 5G/6G Ready
 
+[![Live Demo](https://img.shields.io/badge/Live_Demo-frontend--three--coral--99.vercel.app-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://frontend-three-coral-99.vercel.app)
+
+[![Vercel](https://img.shields.io/badge/Deployed_on-Vercel-black?logo=vercel&logoColor=white)](https://frontend-three-coral-99.vercel.app)
 [![Vite](https://img.shields.io/badge/Vite-5.4-646CFF?logo=vite&logoColor=white)](https://vitejs.dev/)
 [![React](https://img.shields.io/badge/React-18.2-61DAFB?logo=react&logoColor=black)](https://react.dev/)
 [![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.4-38B2AC?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.111-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![3GPP](https://img.shields.io/badge/3GPP-Release_17_SA-blue)](https://www.3gpp.org/)
 [![License](https://img.shields.io/badge/License-Proprietary-emerald)](LICENSE)
+
+🌐 **Live Application:** [**https://frontend-three-coral-99.vercel.app**](https://frontend-three-coral-99.vercel.app)
 
 ---
 
@@ -181,6 +186,12 @@ TwinSight/
 | `overload` | EPC, Edge-03, gNB-05/06 | Slice overload scenario |
 
 Activate **AI Recovery** to watch autonomous healing animate across all affected nodes.
+
+---
+
+## 🔗 Deployment
+
+Live on Vercel: [**https://frontend-three-coral-99.vercel.app**](https://frontend-three-coral-99.vercel.app)
 
 ---
 
